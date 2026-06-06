@@ -1,0 +1,157 @@
+     1                                  [bits 16]
+     2                                  [org 0x7C00]
+     3                                  
+     4                                  start:
+     5 00000000 31C0                        xor ax, ax
+     6 00000002 8ED8                        mov ds, ax
+     7 00000004 8EC0                        mov es, ax
+     8 00000006 8ED0                        mov ss, ax
+     9 00000008 BC007C                      mov sp, 0x7C00
+    10 0000000B 8816[8901]                  mov [boot_drive], dl
+    11 0000000F E81500                      call enable_a20
+    12 00000012 E82D00                      call load_kernel
+    13 00000015 E85900                      call setup_paging
+    14 00000018 0F20C0                      mov eax, cr0
+    15 0000001B 6683C801                    or eax, 1
+    16 0000001F 0F22C0                      mov cr0, eax
+    17 00000022 EA[8A01]0800                jmp 0x08:protected_mode
+    18                                  
+    19                                  enable_a20:
+    20 00000027 E464                        in al, 0x64
+    21 00000029 A802                        test al, 2
+    22 0000002B 75FA                        jnz enable_a20
+    23 0000002D B0D1                        mov al, 0xD1
+    24 0000002F E664                        out 0x64, al
+    25                                  .w1:
+    26 00000031 E464                        in al, 0x64
+    27 00000033 A802                        test al, 2
+    28 00000035 75FA                        jnz .w1
+    29 00000037 B0DF                        mov al, 0xDF
+    30 00000039 E660                        out 0x60, al
+    31                                  .w2:
+    32 0000003B E464                        in al, 0x64
+    33 0000003D A802                        test al, 2
+    34 0000003F 75FA                        jnz .w2
+    35 00000041 C3                          ret
+    36                                  
+    37                                  load_kernel:
+    38 00000042 B402                        mov ah, 0x02
+    39 00000044 B040                        mov al, 64
+    40 00000046 B500                        mov ch, 0
+    41 00000048 B102                        mov cl, 2
+    42 0000004A B600                        mov dh, 0
+    43 0000004C 8A16[8901]                  mov dl, [boot_drive]
+    44 00000050 BB0080                      mov bx, 0x8000
+    45 00000053 8EC3                        mov es, bx
+    46 00000055 31DB                        xor bx, bx
+    47 00000057 CD13                        int 0x13
+    48 00000059 72E7                        jc load_kernel
+    49 0000005B 66BF00001000                mov edi, 0x100000
+    50 00000061 66BE00000800                mov esi, 0x80000
+    51 00000067 66B900200000                mov ecx, 8192
+    52 0000006D 66F3A5                      rep movsd
+    53 00000070 C3                          ret
+    54                                  
+    55                                  setup_paging:
+    56 00000071 0F20E0                      mov eax, cr4
+    57 00000074 6683C820                    or eax, 1 << 5
+    58 00000078 0F22E0                      mov cr4, eax
+    59 0000007B 66BF00100000                mov edi, 0x1000
+    60 00000081 6631C0                      xor eax, eax
+    61 00000084 66B900040000                mov ecx, 1024
+    62 0000008A 66F3AB                      rep stosd
+    63 0000008D 66C706001003200000          mov dword [0x1000], 0x2003
+    64 00000096 66C706002003300000          mov dword [0x2000], 0x3003
+    65 0000009F 66C706003003400000          mov dword [0x3000], 0x4003
+    66 000000A8 66C706004003500000          mov dword [0x4000], 0x5003
+    67 000000B1 66C706005003600000          mov dword [0x5000], 0x6003
+    68 000000BA 66C706006003700000          mov dword [0x6000], 0x7003
+    69 000000C3 66C706007003800000          mov dword [0x7000], 0x8003
+    70 000000CC 66B800900000                mov eax, 0x9000
+    71 000000D2 66A30040                    mov dword [0x4000], eax
+    72 000000D6 66830E004007                or dword [0x4000], 7
+    73 000000DC 66BF00900000                mov edi, 0x9000
+    74 000000E2 66B803800000                mov eax, 0x8003
+    75 000000E8 66B900020000                mov ecx, 512
+    76 000000EE 66F3AB                      rep stosd
+    77 000000F1 66BF00A00000                mov edi, 0xA000
+    78 000000F7 66B803B00000                mov eax, 0xB003
+    79 000000FD 66B900020000                mov ecx, 512
+    80 00000103 66F3AB                      rep stosd
+    81 00000106 66BF00B00000                mov edi, 0xB000
+    82 0000010C 66B803C00000                mov eax, 0xC003
+    83 00000112 66B900020000                mov ecx, 512
+    84 00000118 66F3AB                      rep stosd
+    85 0000011B 66BF00C00000                mov edi, 0xC000
+    86 00000121 66B803D00000                mov eax, 0xD003
+    87 00000127 66B900020000                mov ecx, 512
+    88 0000012D 66F3AB                      rep stosd
+    89 00000130 66BF00D00000                mov edi, 0xD000
+    90 00000136 66B803E00000                mov eax, 0xE003
+    91 0000013C 66B900020000                mov ecx, 512
+    92 00000142 66F3AB                      rep stosd
+    93 00000145 66BF00E00000                mov edi, 0xE000
+    94 0000014B 66B803F00000                mov eax, 0xF003
+    95 00000151 66B900020000                mov ecx, 512
+    96 00000157 66F3AB                      rep stosd
+    97 0000015A 66BF00F00000                mov edi, 0xF000
+    98 00000160 66B803001000                mov eax, 0x100003
+    99 00000166 66B900020000                mov ecx, 512
+   100 0000016C 66F3AB                      rep stosd
+   101 0000016F 66B800100000                mov eax, 0x1000
+   102 00000175 0F22D8                      mov cr3, eax
+   103 00000178 66B9800000C0                mov ecx, 0xC0000080
+   104 0000017E 0F32                        rdmsr
+   105 00000180 660D00010000                or eax, 1 << 8
+   106 00000186 0F30                        wrmsr
+   107 00000188 C3                          ret
+   108                                  
+   109 00000189 00                      boot_drive db 0
+   110                                  
+   111                                  [bits 32]
+   112                                  protected_mode:
+   113 0000018A 66B81000                    mov ax, 0x10
+   114 0000018E 8ED8                        mov ds, ax
+   115 00000190 8EC0                        mov es, ax
+   116 00000192 8ED0                        mov ss, ax
+   117 00000194 8EE0                        mov fs, ax
+   118 00000196 8EE8                        mov gs, ax
+   119 00000198 BC00000900                  mov esp, 0x90000
+   120 0000019D 0F20E0                      mov eax, cr4
+   121 000001A0 83C820                      or eax, 1 << 5
+   122 000001A3 0F22E0                      mov cr4, eax
+   123 000001A6 B800100000                  mov eax, 0x1000
+   124 000001AB 0F22D8                      mov cr3, eax
+   125 000001AE B9800000C0                  mov ecx, 0xC0000080
+   126 000001B3 0F32                        rdmsr
+   127 000001B5 0D00010000                  or eax, 1 << 8
+   128 000001BA 0F30                        wrmsr
+   129 000001BC 0F20C0                      mov eax, cr0
+   130 000001BF 0D00000080                  or eax, 1 << 31
+   131 000001C4 0F22C0                      mov cr0, eax
+   132 000001C7 0F0115[ED010000]            lgdt [gdt_desc]
+   133 000001CE EA[F3010000]0800            jmp 0x08:long_mode_entry
+   134                                  
+   135                                  gdt_start:
+   136 000001D5 0000000000000000        gdt_null: dq 0
+   137 000001DD FFFF0000009A2000        gdt_code: dq 0x00209A000000FFFF
+   138 000001E5 FFFF000000922000        gdt_data: dq 0x002092000000FFFF
+   139                                  gdt_end:
+   140                                  
+   141                                  gdt_desc:
+   142 000001ED 1700                        dw gdt_end - gdt_start - 1
+   143 000001EF [D5010000]                  dd gdt_start
+   144                                  
+   145                                  [bits 64]
+   146                                  long_mode_entry:
+   147 000001F3 66B81000                    mov ax, 0x10
+   148 000001F7 8ED8                        mov ds, ax
+   149 000001F9 8EC0                        mov es, ax
+   150 000001FB 8ED0                        mov ss, ax
+   151 000001FD 8EE0                        mov fs, ax
+   152 000001FF 8EE8                        mov gs, ax
+   153 00000201 E9(00001000)                jmp 0x100000
+   154                                  
+   155                                  times 510-($-$$) db 0
+   155          ******************       error: TIMES value -8 is negative
+   156 00000206 55AA                    dw 0xAA55

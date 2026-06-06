@@ -1,0 +1,26 @@
+     1                                  [BITS 64]
+     2                                  [org 0x100000]
+     3                                  
+     4                                  section .text
+     5                                  
+     6                                  kernel_main64:
+     7 00000000 B800800B00                  mov rax, 0xB8000
+     8 00000005 C6004F                      mov byte [rax], 'O'
+     9 00000008 C640024B                    mov byte [rax + 2], 'K'
+    10 0000000C C640043A                    mov byte [rax + 4], ':'
+    11 00000010 C6400620                    mov byte [rax + 6], ' '
+    12 00000014 C6400836                    mov byte [rax + 8], '6'
+    13 00000018 C6400A34                    mov byte [rax + 10], '4'
+    14 0000001C C6400C62                    mov byte [rax + 12], 'b'
+    15 00000020 C6400E69                    mov byte [rax + 14], 'i'
+    16 00000024 C6401074                    mov byte [rax + 16], 't'
+    17 00000028 C6401220                    mov byte [rax + 18], ' '
+    18 0000002C C640144D                    mov byte [rax + 20], 'M'
+    19 00000030 C640164F                    mov byte [rax + 22], 'O'
+    20 00000034 C6401844                    mov byte [rax + 24], 'D'
+    21 00000038 C6401A45                    mov byte [rax + 26], 'E'
+    22 0000003C C6401C21                    mov byte [rax + 28], '!'
+    23                                  
+    24                                  .halt:
+    25 00000040 F4                          hlt
+    26 00000041 EBFD                        jmp .halt
